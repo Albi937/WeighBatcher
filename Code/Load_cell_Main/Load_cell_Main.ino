@@ -23,6 +23,11 @@ void splashScreen(int delayt);
 void updateButton();
 float calibration_factor1 = ReadEERPOM(ADDRESS1);
 float calibration_factor2 = ReadEERPOM(ADDRESS2);
+float calibration_factor2 = ReadEERPOM(ADDRESS2);
+int dispenseWeight = ReadEERPOM(ADDRESS3);
+float startWeight = 0;
+float threshold_weight = 2;
+
 
 /*Buttons*/
 int SW1 = 0;
@@ -47,6 +52,8 @@ unsigned long SW4Time = 0;
 unsigned long SW5Time = 0;
 int menu = 0;                     //1.Change Dispense weight,2)......
 unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers
+
+//___LCD__&___MENU//
 unsigned long lcd_last_refresh = 0;
 unsigned long lcd_refresh = 250;
 unsigned long menu_start_Or_lst_ButtonPress = 0;
@@ -54,9 +61,6 @@ unsigned long menu_Or_button_timeout = 15000;
 unsigned long button_incrementdelay = 150;
 unsigned long lastButton_time = 150;
 
-int dispenseWeight = ReadEERPOM(ADDRESS3);
-float startWeight = 0;
-float threshold_weight = 2;
 
 void setup()
 {
