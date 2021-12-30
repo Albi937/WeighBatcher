@@ -2,13 +2,12 @@
 
 // FLASH ADDRESS Range 0x0000 - 0x7800
 
-int ADDRESS1 = 0x77C0; //Calibration_Value_1
-int ADDRESS2 = 0x77C8; //Calibration_Value_1
-int ADDRESS3 = 0x77D0; //Dispense Weight
+int ADDRESS1 = 0x77C0; // Calibration_Value_1
+int ADDRESS2 = 0x77C8; // Calibration_Value_1
+int ADDRESS3 = 0x77D0; // Dispense Weight
 
 #include <LiquidCrystal.h>
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-
 #include "HX711.h"
 #define LOADCELL1_DOUT_PIN A2
 #define LOADCELL1_SCK_PIN A3
@@ -45,7 +44,7 @@ unsigned long SW2Time = 0;
 unsigned long SW3Time = 0;
 unsigned long SW4Time = 0;
 unsigned long SW5Time = 0;
-int menu = 0;                     //1.Change Dispense weight,2)......
+int menu = 0;                     // 1.Change Dispense weight,2)......
 unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers
 unsigned long lcd_last_refresh = 0;
 unsigned long lcd_refresh = 250;
@@ -79,7 +78,7 @@ void setup()
   {
     delay(1000);
     // getValueDisp("Settings:1-3");
-    //calibrateMode();
+    // calibrateMode();
     calibrateMode();
   }
 
@@ -92,7 +91,7 @@ void loop()
   updateButton();
   if (SW5 == 0)
   {
-    //tare Only
+    // tare Only
     scale1.tare();
   }
 }
@@ -105,15 +104,16 @@ void dispense()
   if (startWeight >= dispenseWeight)
   {
     int i = 0;
-    digitalWrite(A4,HIGH);
+    digitalWrite(A4, HIGH);
     while (i == 0)
-    { updateButton();
+    {
+      updateButton();
       current_weight = getWeight();
       dispenseScreen(current_weight);
-      if(SWPS3==0)
-      { 
-        digitalWrite(A4,LOW);
-        i=1;
+      if (SWPS3 == 0)
+      {
+        digitalWrite(A4, LOW);
+        i = 1;
         lcd.clear();
         lcd.print("Emrgncy Stop");
         lcd.print("Weight:");
@@ -122,7 +122,7 @@ void dispense()
       }
       if (current_weight < ((startWeight - threshold_weight) - dispenseWeight))
       {
-        digitalWrite(A4,LOW);
+        digitalWrite(A4, LOW);
         i = 1;
       }
     }
@@ -187,8 +187,8 @@ float ReadEERPOM(int address)
     MYV.x[i] = EEPROM.read(address + i);
   }
 
-  //Serial.print("Read Vale: ");
-  //Serial.println(MYV.cbvalue);
+  // Serial.print("Read Vale: ");
+  // Serial.println(MYV.cbvalue);
 
   return MYV.cbvalue;
 }
@@ -210,8 +210,8 @@ void WriteEERPOM(float Value, int address)
     EEPROM.update(address + i, MYV.x[i]);
   }
 
-  //Serial.print("Write Vale: ");
-  //Serial.println(Value);
+  // Serial.print("Write Vale: ");
+  // Serial.println(Value);
 
   ReadEERPOM(address);
 }
@@ -222,7 +222,7 @@ void calibrateMode()
   delay(2000);
   menu_start_Or_lst_ButtonPress = millis();
   scale1.tare();
-  //scale2.tare();
+  // scale2.tare();
   lcd.clear();
   int x = 0;
   while (x == 0)
@@ -255,7 +255,7 @@ void calibrateMode()
         {
           j = 2;
           WriteEERPOM(calibration_factor1, ADDRESS1);
-          scale1.set_scale(calibration_factor1); //Adjust to this calibration factor
+          scale1.set_scale(calibration_factor1); // Adjust to this calibration factor
           lcd.clear();
           lcd.print("Saved");
         }
@@ -302,7 +302,7 @@ void calibrateMode()
         {
           j = 2;
           WriteEERPOM(calibration_factor2, ADDRESS2);
-          scale2.set_scale(calibration_factor2); //Adjust to this calibration factor
+          scale2.set_scale(calibration_factor2); // Adjust to this calibration factor
           lcd.clear();
           lcd.print("Saved");
         }
@@ -341,18 +341,90 @@ void calibrateMode()
   }
 }
 
+void calibrate2()
+{
+  scale1.set_scale(1);
+  scale2.set_scale(1);
+  float w1 = getValueDisp("Weight1", 0.1, 0);
+  float a1 = scale1.get_units();
+  float b1 = 0;
+  lcd.clear();
+  lcd.print("Done");
+  updateButton();
+  delay(1000);
+  Serial.println("TEST");
+
+  float w2 = getValueDisp("Weight2", 0.1, 0);
+  lcd.println("Saving..");
+  delay(5000);
+  float a2 = scale1.get_units();
+  float b2 = scale2.get_units();
+  lcd.print("Done");
+  delay(1500);
+  lcd.clear();
+  lcd.println("Saving..");
+  calibration_factor1 = (((b1 * w2) - (b2 * w1)) / ((a2 * b1) - (a1 * b2)));
+  calibration_factor2 = (((a1 * w2) - (a2 * w1)) / ((a1 * b2) - (a2 * b1)));
+  // WriteEERPOM(ADDRESS1, calibration_factor1);
+  // WriteEERPOM(ADDRESS2, calibration_factor2);
+  delay(1000);
+}
+
+float getValueDisp(String text, float step, float start_value)
+{
+  float value = 0;
+  int i = 0;
+  while (i == 0)
+  {
+    updateButton();
+    if (millis() > (lcd_last_refresh + lcd_refresh))
+    {
+      lcd_last_refresh = millis();
+      lcd.clear();
+      lcd.print(text);
+      lcd.setCursor(0, 1);
+      lcd.print(value);
+    }
+
+    updateButton();
+    if ((millis() - lastButton_time) > button_incrementdelay)
+    {
+      if ((SWPS5 == 0))
+      {
+        lastButton_time = millis();
+        menu_start_Or_lst_ButtonPress = millis();
+        value = value + step;
+      }
+
+      if ((SWPS3 == 0))
+      {
+        lastButton_time = millis();
+        menu_start_Or_lst_ButtonPress = millis();
+        value = value - step;
+      }
+
+      if ((SWPS4 == 0))
+      {
+        lastButton_time = millis();
+        menu_start_Or_lst_ButtonPress = millis();
+        return value;
+      }
+    }
+  }
+}
+
 void initializeScale()
 {
   scale1.begin(LOADCELL1_DOUT_PIN, LOADCELL1_SCK_PIN);
   scale2.begin(LOADCELL2_DOUT_PIN, LOADCELL2_SCK_PIN);
   scale1.set_scale(calibration_factor1);
   scale2.set_scale(calibration_factor2);
-  scale1.tare(); //Reset the scale to 0
-  scale2.tare(); //Reset the scale to 0
+  scale1.tare(); // Reset the scale to 0
+  scale2.tare(); // Reset the scale to 0
   long zero_factor1 = scale1.read_average();
   long zero_factor2 = scale2.read_average();
-  scale1.set_scale(calibration_factor1); //Adjust to this calibration factor
-  scale2.set_scale(calibration_factor2); //Adjust to this calibration factor
+  scale1.set_scale(calibration_factor1); // Adjust to this calibration factor
+  scale2.set_scale(calibration_factor2); // Adjust to this calibration factor
 }
 
 void splashScreen(int delayt)
@@ -374,8 +446,8 @@ void splashScreen(int delayt)
 
 void updateButton()
 {
-  //Buttons SW1,SW2 INTERNAL
-  //BUTTONS SW3,SW4,SW5->External
+  // Buttons SW1,SW2 INTERNAL
+  // BUTTONS SW3,SW4,SW5->External
   SW1 = digitalRead(6);
   SW2 = digitalRead(7);
   SW3 = analogRead(A7);
@@ -450,82 +522,12 @@ void updateButton()
       SWPS5 = SW5;
     }
   }
-  //Serial.print("SWPS3:");
-  //Serial.print(SWPS3);
-  //Serial.print(" SWPS4:");
-  //Serial.print(SWPS4);
-  //Serial.print(" SWPS5:");
-  //Serial.println(SWPS5);
+  // Serial.print("SWPS3:");
+  // Serial.print(SWPS3);
+  // Serial.print(" SWPS4:");
+  // Serial.print(SWPS4);
+  // Serial.print(" SWPS5:");
+  // Serial.println(SWPS5);
 }
 
-void calibrate2()
-{
-  scale1.set_scale(1);
-  scale2.set_scale(1);
-  float w1 = getValueDisp("Weight1", 0.1, 0);
-  float a1 = scale1.get_units();
-  float b1 = 0;
-  lcd.clear();
-  lcd.print("Done");
-  updateButton();
-  delay(1000);
-  Serial.println("TEST");
 
-  float w2 = getValueDisp("Weight2", 0.1, 0);
-  lcd.println("Saving..");
-  delay(5000);
-  float a2 = scale1.get_units();
-  float b2 = scale2.get_units();
-  lcd.print("Done");
-  delay(1500);
-  lcd.clear();
-  lcd.println("Saving..");
-  calibration_factor1 = (((b1 * w2) - (b2 * w1)) / ((a2 * b1) - (a1 * b2)));
-  calibration_factor2 = (((a1 * w2) - (a2 * w1)) / ((a1 * b2) - (a2 * b1)));
-  //WriteEERPOM(ADDRESS1, calibration_factor1);
-  //WriteEERPOM(ADDRESS2, calibration_factor2);
-  delay(1000);
-}
-
-float getValueDisp(String text, float step, float start_value)
-{
-  float value = 0;
-  int i = 0;
-  while (i == 0)
-  {
-    updateButton();
-    if (millis() > (lcd_last_refresh + lcd_refresh))
-    {
-      lcd_last_refresh = millis();
-      lcd.clear();
-      lcd.print(text);
-      lcd.setCursor(0, 1);
-      lcd.print(value);
-    }
-
-    updateButton();
-    if ((millis() - lastButton_time) > button_incrementdelay)
-    {
-      if ((SWPS5 == 0))
-      {
-        lastButton_time = millis();
-        menu_start_Or_lst_ButtonPress = millis();
-        value = value + step;
-      }
-
-      if ((SWPS3 == 0))
-      {
-        lastButton_time = millis();
-        menu_start_Or_lst_ButtonPress = millis();
-        value = value - step;
-      }
-
-      if ((SWPS4 == 0))
-      {
-        lastButton_time = millis();
-        menu_start_Or_lst_ButtonPress = millis();
-        return value;
-      }
-    }
-  }
-}

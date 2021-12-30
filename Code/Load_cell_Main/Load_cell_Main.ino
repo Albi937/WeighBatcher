@@ -29,38 +29,47 @@ float startWeight = 0;
 float threshold_weight = 2;
 
 
-/*Buttons*/
-int SW1 = 0;
-int SWP1 = 1;
+/*____Buttons____*/
+//__Button__MAP__Config__//
+int butt1 =  6;
+int butt2 =  7;
+int butt3 = A5;
+int butt4 = A6;
+int butt5 = A7;
+//______________________//
+
+//__Button Debounce, Timing Variables__//
+int SW1   = 0;
+int SWP1  = 1;
 int SWPS1 = 1;
-int SW2 = 0;
+int SW2   = 0;
 int SWPS2 = 1;
-int SWP2 = 1;
-int SW3 = 0;
-int SWP3 = 1;
+int SWP2  = 1;
+int SW3   = 0;
+int SWP3  = 1;
 int SWPS3 = 1;
-int SW4 = 0;
-int SWP4 = 1;
+int SW4   = 0;
+int SWP4  = 1;
 int SWPS4 = 1;
-int SW5 = 0;
-int SWP5 = 1;
+int SW5   = 0;
+int SWP5  = 1;
 int SWPS5 = 1;
 unsigned long SW1Time = 0; // the last time the input pin was toggled
 unsigned long SW2Time = 0;
 unsigned long SW3Time = 0;
 unsigned long SW4Time = 0;
 unsigned long SW5Time = 0;
-int menu = 0;                     //1.Change Dispense weight,2)......
 unsigned long debounceDelay = 50; // the debounce time; increase if the output flickers
+//_________________________________
 
-//___LCD__&___MENU//
+//___LCD__&__MENU___//
 unsigned long lcd_last_refresh = 0;
 unsigned long lcd_refresh = 250;
 unsigned long menu_start_Or_lst_ButtonPress = 0;
 unsigned long menu_Or_button_timeout = 15000;
 unsigned long button_incrementdelay = 150;
 unsigned long lastButton_time = 150;
-
+//_______________________________________________
 
 void setup()
 {
@@ -72,9 +81,9 @@ void setup()
   WriteEERPOM(ADDRESS3, 10.0);
   pinMode(6, INPUT_PULLUP);
   pinMode(7, INPUT_PULLUP);
-  pinMode(A7, INPUT_PULLUP);
-  pinMode(A5, INPUT_PULLUP);
-  pinMode(A6, INPUT_PULLUP);
+  pinMode(A7,INPUT_PULLUP);
+  pinMode(A5,INPUT_PULLUP);
+  pinMode(A6,INPUT_PULLUP);
 
   SW1 = digitalRead(6);
   SW2 = digitalRead(7);
@@ -94,13 +103,8 @@ void loop()
 {
   mainDisplay();
   updateButton();
-  Serial.print("SWPS3:");
-  Serial.print(SWPS3);
-  Serial.print("  ");
-  Serial.print("SWPS4:");
-  Serial.print(SWPS4);
-  Serial.print("SWPS5:");
-  Serial.println(SWPS5);
+  //buttonDebug(); //Serial Output on Buttons..
+  
   
   if (SW5 == 0)
   {
@@ -390,9 +394,9 @@ void updateButton()
   //BUTTONS SW3,SW4,SW5->External
   SW1 = digitalRead(6);
   SW2 = digitalRead(7);
-  SW3 = analogRead(A5);
-  SW4 = analogRead(A6);
-  SW5 = analogRead(A7);
+  SW3 = analogRead(butt3);
+  SW4 = analogRead(butt4);
+  SW5 = analogRead(butt5);
   if (SW1 != SWP1)
   {
     SW1Time = millis(); // reset the debouncing timer
@@ -462,6 +466,28 @@ void updateButton()
       SWPS5 = SW5;
     }
   }
+}
+
+void buttonDebug()
+{
+  Serial.print("SWPS1:");
+  Serial.print(SWPS1);
+  Serial.print(" ");
+
+  Serial.print("SWPS2:");
+  Serial.print(SWPS2);
+  Serial.print(" ");
+
+  Serial.print("SWPS3:");
+  Serial.print(SWPS3);
+  Serial.print(" ");
+
+  Serial.print("SWPS4:");
+  Serial.print(SWPS4);
+  Serial.print(" ");
+
+  Serial.print("SWPS5:");
+  Serial.println(SWPS5);
 }
 
 void calibrate2()
