@@ -104,7 +104,8 @@ void loop()
   mainDisplay();
   updateButton();
   menuEntry();
-  //buttonDebug(); // Serial Output on Buttons..
+  updateButton();
+  // buttonDebug(); // Serial Output on Buttons..
 
   if (SWPS4 == 0)
   {
@@ -134,7 +135,7 @@ void dispense()
         digitalWrite(A4, LOW);
         i = 1;
         lcd.clear();
-        lcd.println("Emrgncy Stop");
+        lcd.println("Emergency Stop");
         lcd.print("Weight:");
         lcd.print(current_weight - startWeight);
         delay(30000);
@@ -149,7 +150,9 @@ void dispense()
   else
   {
     lcd.clear();
-    lcd.println("Not Enough Material");
+    lcd.print("Not Enough");
+    lcd.setCursor(0,1);
+    lcd.print(" Material");
     delay(1000);
   }
 }
@@ -166,6 +169,7 @@ void menuEntry()
     {
       // Enter Menu
       menu();
+      updateButton();
     }
   }
   else
@@ -607,10 +611,10 @@ void menu()
 {
   updateButton();
   unsigned long entertime = millis();
-  String items[3] = {"Adj Weight", "Calibrate", "Exit"};
+  String items[2] = {"Adj Weight", "Calibrate"};
   int curntPos = 0;
   int i = 0;
-  int l = 3 - 1;
+  int l = 2 - 1;
   updateButton();
   while (i == 0)
   {
@@ -629,68 +633,82 @@ void menu()
       lcd.print(items[curntPos]);
     }
     updateButton();
-    if (SWPS3 == 0)
+    if (millis() - lastButton_time > 500)
     {
-      entertime = millis();
+      if (SWPS3 == 0)
+      {
+        lastButton_time = millis();
+        entertime = millis();
 
-      if (curntPos > 0)
-      {
-        curntPos = curntPos - 1;
-      }
-      else
-        curntPos = l;
-    }
-    updateButton();
-    if (SWPS5 == 0)
-    {
-      entertime = millis();
-
-      if (curntPos < l)
-      {
-        curntPos = curntPos + 1;
-      }
-      else
-        curntPos = 0;
-    }
-    updateButton();
-
-    if (SWPS4 == 0)
-    {
-      switch (curntPos)
-      {
-      case 0:
-      {
-        updateButton();
-        lcd.clear();
-        delay(1500);
-        updateButton();
-        int tmp = dispenseWeight;
-        dispenseWeight = getValueDisp("Weight", 1, tmp);
-        //buttonDebug();
-        lcd.clear();
-        lcd.print("Saved Value");
-        lcd.setCursor(0,1);
-        lcd.print(dispenseWeight);
-        lcd.print(" Kgs");
-        delay(1500);
-        updateButton();
-        if (dispenseWeight != tmp)
+        if (curntPos > 0)
         {
-          WriteEERPOM(dispenseWeight, ADDRESS3);
+          curntPos = curntPos - 1;
         }
-        updateButton();
-        return;
+        else
+          curntPos = l;
       }
-      break;
-
-      case 1:
+      updateButton();
+      if (SWPS5 == 0)
       {
-        // calibrate2();
-        lcd.clear();
-        lcd.print("Dummy Msg");
-        delay(1000);
+        lastButton_time = millis();
+        entertime = millis();
+
+        if (curntPos < l)
+        {
+          curntPos = curntPos + 1;
+        }
+        else
+          curntPos = 0;
       }
-      break;
+      updateButton();
+
+      if (SWPS4 == 0)
+      {
+        lastButton_time = millis();
+        switch (curntPos)
+        {
+        case 0:
+        {
+          updateButton();
+          lcd.clear();
+          delay(1500);
+          updateButton();
+          int tmp = dispenseWeight;
+          dispenseWeight = getValueDisp("Weight", 1, tmp);
+          // buttonDebug();
+          lcd.clear();
+          lcd.print("Saved Value");
+          lcd.setCursor(0, 1);
+          lcd.print(dispenseWeight);
+          lcd.print(" Kgs");
+          updateButton();
+          updateButton();
+          if (dispenseWeight != tmp)
+          {
+            WriteEERPOM(dispenseWeight, ADDRESS3);
+          }
+          updateButton();
+          int j = 0;
+          while(j==0)
+          {
+            updateButton();
+            if((millis() - lastButton_time)>3000)
+            {
+              return;
+            }
+          }
+        }
+        break;
+
+        case 1:
+        {
+          lcd.clear();
+          lcd.print("Wait..");
+          delay(1000);
+          calibrate2();
+        }
+        break;
+        }
       }
     }
   }
